@@ -1,5 +1,3 @@
-import { useRef } from 'react';
-
 import './App.css'
 import {
   Chart as ChartJS,
@@ -22,6 +20,11 @@ ChartJS.register(
   Tooltip,
   Legend
 );
+
+const DEFAULT_COLOR = '#0080ec';
+const SELECTED_COLOR = '#00ac69';
+const DEFAULT_TEXT_SIZE_IN_PX = 12;
+const DEFAULT_FONT_WEIGHT = 'bold';
 
 const labels = [
   'Novo mercado e modelos de negócio',
@@ -70,6 +73,25 @@ const getLabelIndex = (x: number, y: number, pointLabels: any[]) => {
   return elementIndex;
 }
 
+const resetAllFillText = (chart: ChartJS) => {
+  const { scales } = chart;
+  const scale = scales.r as any;
+  scale._pointLabelItems.forEach((pointLabelItem: any, labelIndex: number) => {
+    const selectedLabel = scale._pointLabels[labelIndex];
+    renderElementAtCanvas(selectedLabel, DEFAULT_COLOR, pointLabelItem, chart)
+  });
+};
+
+const renderElementAtCanvas = (label: string, color: string, pointLabelItem: any, chart: ChartJS) => {
+  const { top, right, bottom, left } = pointLabelItem;
+  const { family, size, style, lineHeight } = ChartJS.defaults.font;
+
+  chart.ctx.font = `${DEFAULT_FONT_WEIGHT} ${size}px ${family}`;
+  chart.ctx.fillStyle = color;
+  chart.ctx.clearRect(left, bottom, right - left, -14);
+  chart.ctx.fillText(label, left, top + 11);
+}
+
 const options: ChartOptions<'radar'> = {
   responsive: true,
   onHover: ({ x = 0, y = 0 }, activeHover, chart) => {
@@ -93,6 +115,9 @@ const options: ChartOptions<'radar'> = {
     }
     const selectedLabel = scale._pointLabels[labelIndex];
     console.log(`clicked at ${labelIndex} - ${selectedLabel}`);
+
+    resetAllFillText(chart);
+    renderElementAtCanvas(selectedLabel, SELECTED_COLOR, scale._pointLabelItems[labelIndex], chart)
   },
   scales: {
     r: {
@@ -103,9 +128,9 @@ const options: ChartOptions<'radar'> = {
       grid: { color: '#0000008f' },
       angleLines: { color: 'transparent' },
       pointLabels: {
-        font: { size: 12, weight: 'bold' },
-        color: '#0080ec',
-      }
+        font: { size: DEFAULT_TEXT_SIZE_IN_PX, weight: DEFAULT_FONT_WEIGHT },
+        color: DEFAULT_COLOR,
+      },
     }
   },
   elements: {
